@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Jump Game</title>
+    <style>
+        /* Boundary Rules & UI Styling */
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        #game-container { width: 600px; height: 200px; border-bottom: 2px solid #333; background: white; position: relative; overflow: hidden; }
+        
+        #score-board { position: absolute; top: 10px; right: 10px; font-weight: bold; }
+        
+        #player { width: 40px; height: 40px; background-color: blue; position: absolute; bottom: 0; left: 50px; transition: bottom 0.25s ease-out; }
+        #player.jumping { bottom: 100px; } /* Jump height */
+
+        #obstacle { width: 20px; height: 40px; background-color: red; position: absolute; bottom: 0; left: 600px; }
+
+        #game-over-screen { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: none; }
+        button { padding: 10px 20px; cursor: pointer; background: #333; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="score-board">Score: 0</div>
+        
+        <div id="game-over-screen">
+            <h1>Game Over!</h1>
+            <button onclick="resetGame()">Restart</button>
+        </div>
+
+        <div id="player"></div>
+        <div id="obstacle"></div>
+    </div>
+
+    <script>
+        // Data Properties (Performance Tracker)
+        let score = 0;
+        let gameOver = false;
+        let obstaclePosition = 600;
+        let isJumping = false;
+        let animationFrame;
+
+        const player = document.getElementById('player');
+        const obstacle = document.getElementById('obstacle');
+        const scoreBoard = document.getElementById('score-board');
+        const gameOverScreen = document.getElementById('game-over-screen');
+
+        // Core Game Loop Logic
+        function gameLoop() {
+            if (gameOver) return;
+
+            // Move obstacle left
+            obstaclePosition -= 5;
+            obstacle.style.left = obstaclePosition + 'px';
+
+            // Reset obstacle and increment score (Boundary Rules)
+            if (obstaclePosition < -20) {
+                obstaclePosition = 600;
+                incrementScore();
+            }
+
+            checkCollision();
+
+            if (!gameOver) {
+                animationFrame = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Real-Time Event Handling (Jump)
+        function jump() {
+            if (isJumping || gameOver) return;
+            
+            isJumping = true;
+            player.classList.add('jumping');
+            
+            setTimeout(() => {
+                player.classList.remove('jumping');
+                isJumping = false;
+            }, 500); // Match this with CSS transition time
+        }
+
+        // Win/Loss Conditions (Collision Detection)
+        function checkCollision() {
+            const playerLeft = 50;
+            const playerRight = 90;
+            const obstacleLeft = obstaclePosition;
+            const obstacleRight = obstaclePosition + 20;
+
+            // Simple collision check: if obstacle is in player's X-range and player isn't jumping
+            if (obstacleLeft < playerRight && obstacleRight > playerLeft && !isJumping) {
+                gameOver = true;
+                gameOverScreen.style.display = 'block';
+                cancelAnimationFrame(animationFrame);
+            }
+        }
+
+        function incrementScore() {
+            score++;
+            scoreBoard.innerText = `Score: ${score}`;
+        }
+
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            obstaclePosition = 600;
+            scoreBoard.innerText = `Score: 0`;
+            gameOverScreen.style.display = 'none';
+            gameLoop();
+        }
+
+        // Start Game & Keyboard Listeners
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') jump();
+        });
+
+        gameLoop();
+    </script>
+</body>
+</html>
